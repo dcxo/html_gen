@@ -5,7 +5,7 @@
 
 ---
 
-html\_gen is a tool to generate static pages, using componets and data written in json files
+html\_gen is a tool to generate static pages, using components and data written in json files
 
 ## Installation
 You will need [cargo](https://github.com/rust-lang/cargo) installed
