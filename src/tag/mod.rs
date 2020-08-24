@@ -47,7 +47,7 @@ mod tests {
         <meta key="h" content="w" />
     </head>
     <body>
-        <h1>hola {{ data }} adios</ h1    >
+        <h1>hola</ h1    >
     </body>
 </html>"#;
 
@@ -62,6 +62,10 @@ mod tests {
                         name: "head".to_string(),
                         children: Tags(vec![Tag::HTMLTag(HTMLTag {
                             name: "meta".to_string(),
+                            attrs: Attrs(vec![
+                                Attr("key".to_string(), Some("h".to_string())),
+                                Attr("content".to_string(), Some("w".to_string()))
+                            ]),
                             ..Default::default()
                         })]),
                         ..Default::default()
