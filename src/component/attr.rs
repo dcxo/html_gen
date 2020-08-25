@@ -1,4 +1,5 @@
 use colored::Colorize;
+use std::collections::HashMap;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum AttrKind {
@@ -16,6 +17,16 @@ impl AttrKind {
             "boolean" => Some(AttrKind::Boolean),
             "data" => Some(AttrKind::Data),
             _ => None,
+        }
+    }
+}
+
+impl AttrKind {
+    pub fn is_boolean(&self) -> bool {
+        if let AttrKind::Boolean = self {
+            true
+        } else {
+            false
         }
     }
 }
@@ -47,4 +58,12 @@ impl ComponentAttr {
             .filter_map(ComponentAttr::from_key_value)
             .collect()
     }
+}
+
+pub fn to_hashmap(c_attrs: Vec<ComponentAttr>) -> HashMap<String, AttrKind> {
+    let mut map = HashMap::new();
+    for c_attr in c_attrs {
+        map.insert(c_attr.0, c_attr.1);
+    }
+    map
 }
