@@ -4,7 +4,8 @@
 
 ---
 <p align="center">
-  <img src="https://travis-ci.org/dcxo/html_gen.svg?branch=master"/> 
+  <img src="https://travis-ci.org/dcxo/html_gen.svg?branch=master" /> 
+  <img src="https://github.com/dcxo/html_gen/workflows/Rust%20Workflow/badge.svg" />
 </p>
 
 html\_gen is a tool to generate static pages, using components and data written in json files
