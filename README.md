@@ -3,6 +3,9 @@
 <p align="center"> <a href="#installation">Installation</a> | <a href="#usage">Usage</a> | <a href="#components-and-data">Components and data</a> </p>
 
 ---
+<p align="center">
+  <img src="https://travis-ci.org/dcxo/html_gen.svg?branch=master"/> 
+</p>
 
 html\_gen is a tool to generate static pages, using components and data written in json files
 
