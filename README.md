@@ -1,6 +1,5 @@
 # <p style="text-align: center"> html\_gen </p>
 
----
 <p style="text-align: center"> <a href="#installation">Installation</a> · <a href="#usage">Usage</a> · <a href="#components-and-data">Components and data</a> </p>
 
 ---
