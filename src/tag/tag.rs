@@ -1,14 +1,8 @@
 use super::Attrs;
-use crate::component::{get_components, Component};
+use crate::component::Component;
 use anyhow::{ensure, Result};
 use html_parser::{Dom, Element, Node};
-use std::{
-    collections::HashMap,
-    fmt::{Display, Error},
-    fs::File,
-    path::PathBuf,
-    vec::IntoIter,
-};
+use std::{fmt::Display, fs::File, path::PathBuf, vec::IntoIter};
 
 #[derive(Default, Debug, PartialEq, Clone)]
 pub struct HTMLTag {

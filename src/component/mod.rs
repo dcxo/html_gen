@@ -1,24 +1,11 @@
 use anyhow::{ensure, Result};
-use std::{collections::HashMap, fs, io::Read};
+use std::{fs, io::Read};
 
 mod attr;
 
 use crate::tag::{Attrs, Tag};
-use attr::{AttrKind, ComponentAttr};
-use colored::Colorize;
+use attr::ComponentAttr;
 use fs::File;
-
-pub fn get_components() -> Result<HashMap<String, Component>> {
-    let mut map = HashMap::new();
-    for entry in fs::read_dir("components")? {
-        let file_path = entry.unwrap().path();
-        let stem = file_path.file_stem().unwrap_or_default();
-
-        let comp = Component::from_file(&mut File::open(&file_path)?)?;
-        map.insert(stem.to_str().unwrap().to_string(), comp);
-    }
-    Ok(map)
-}
 
 #[derive(Debug, PartialEq, Default, Clone)]
 pub struct Component {
