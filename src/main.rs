@@ -2,20 +2,19 @@ use anyhow::{ensure, Context, Result};
 use clap::Clap;
 use colored::Colorize;
 use std::{
-    collections::HashMap,
-    ffi::OsString,
-    fs::{create_dir, File},
+    fs::{self, File},
     io::{self, Read, Write},
-    path::Path,
+    path::{Path, PathBuf},
     process::exit,
 };
 
 mod command;
 mod component;
 mod data;
-mod expander;
+mod tag;
 
 use command::*;
+use tag::Tag;
 
 fn main() -> Result<()> {
     let opts: Opts = Opts::parse();
@@ -34,21 +33,22 @@ fn main() -> Result<()> {
 /// the basic structure of a html_gen project
 fn create_proj(proj_name: Option<String>) -> Result<()> {
     let mut project_name: String;
-    if proj_name.is_none() {
-        println!("How is your project named? ");
+    match proj_name {
+        Some(proj_name) => project_name = proj_name,
+        None => {
+            print!("How is your project named? ");
+            let _ = io::stdout().flush();
 
-        project_name = String::new();
-        if let Err(e) = io::stdin().read_line(&mut project_name) {
-            eprintln!("There was an error: {}", e);
-        };
-    } else {
-        project_name = proj_name.unwrap(); // unwrap safe
+            project_name = String::new();
+            io::stdin().read_line(&mut project_name)?;
+            project_name.retain(|c| !c.is_whitespace());
+        }
     }
-    let path = std::path::PathBuf::from(project_name.trim());
+    let path = PathBuf::from(&project_name);
 
-    create_dir(&path)?;
-    create_dir(&path.join("components"))?;
-    create_dir(&path.join("data"))?;
+    fs::create_dir(&path)?;
+    fs::create_dir(&path.join("components"))?;
+    fs::create_dir(&path.join("data"))?;
     File::create(&path.join("index.html"))?;
 
     println!(
@@ -71,15 +71,9 @@ fn build_proj() -> Result<()> {
         "this folder does not match with a html_gen project",
     );
 
-    let mut components_map = HashMap::<OsString, component::Component>::new();
+    // let mut components_map = HashMap::<String, Component>::new();
 
-    std::fs::read_dir("components")?.for_each(|entry| {
-        let file_path = entry.unwrap().path();
-        let stem = file_path.file_stem().unwrap();
-
-        let comp = component::Component::from_file(&mut File::open(&file_path).unwrap()).unwrap();
-        components_map.insert(stem.to_os_string(), comp);
-    });
+    println!("{}. Reading components", "Reading".cyan().bold());
 
     println!("{}. Reading index.html file", "Building".cyan().bold());
 
@@ -89,15 +83,20 @@ fn build_proj() -> Result<()> {
         .read_to_end(&mut buf)
         .context("Could not read index.html.")?;
     let mut index_content = String::from_utf8(buf)?;
-    index_content = expander::expand_components(components_map, &mut index_content);
-    println!("{}. Reading components", "Expanding".cyan().bold());
+
+    let index_parsed = Tag::from_raw(&index_content).context("Could not parse index.html")?;
+
+    println!("{}. Expanding macros", "Expanding".cyan().bold());
+
+    index_content = format!("{}", index_parsed);
+
     println!("{}. Reading data", "Binding".cyan().bold());
 
-    index_content = expander::expand_data(&mut index_content);
+    data::expand_data(&mut index_content)?;
 
     let dst_dir = Path::new("dist");
     if !dst_dir.exists() {
-        create_dir(dst_dir).context("Unable to create 'dist' dir")?;
+        fs::create_dir(dst_dir).context("Unable to create 'dist' dir")?;
     }
     let mut index_file = File::create(dst_dir.join("index.html"))?;
     index_file.write_all(index_content.as_bytes())?;
