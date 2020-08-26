@@ -2,7 +2,12 @@ use super::Attrs;
 use crate::component::Component;
 use anyhow::{ensure, Result};
 use html_parser::{Dom, Element, Node};
-use std::{fmt::Display, fs::File, path::PathBuf, vec::IntoIter};
+use std::{
+    fmt::{Display, Error},
+    fs::File,
+    path::PathBuf,
+    vec::IntoIter,
+};
 
 #[derive(Default, Debug, PartialEq, Clone)]
 pub struct HTMLTag {
@@ -35,11 +40,11 @@ impl Tag {
 
         // SAFETY: We previously check that dom.children has only one value
         let node = unsafe { dom.children.get_unchecked(0) };
-        Ok(Self::from_node(node))
+        Self::from_node(node)
     }
-    fn from_node(node: &Node) -> Self {
+    fn from_node(node: &Node) -> Result<Self> {
         match node {
-            Node::Text(text) => Tag::Text(text.clone()),
+            Node::Text(text) => Ok(Tag::Text(text.clone())),
             Node::Element(Element {
                 name,
                 attributes,
@@ -47,25 +52,29 @@ impl Tag {
                 ..
             }) => {
                 let path = PathBuf::from("components").join(format!("{}.html", name));
-                let attrs = Attrs::from_hashmap(attributes);
-                let children = Tags(children.iter().map(Self::from_node).collect());
+                let attrs = Attrs::from_hashmap(attributes.to_owned());
+                let children = Tags(
+                    children
+                        .iter()
+                        .map(Self::from_node)
+                        .map(Result::unwrap)
+                        .collect(),
+                );
                 if path.exists() {
-                    Tag::ComponentTag(ComponentTag {
+                    Ok(Tag::ComponentTag(ComponentTag {
                         attrs,
                         children,
-                        component: Box::from(
-                            Component::from_file(&mut File::open(path).unwrap()).unwrap(),
-                        ),
-                    })
+                        component: Box::from(Component::from_file(&mut File::open(path)?)?),
+                    }))
                 } else {
-                    Tag::HTMLTag(HTMLTag {
+                    Ok(Tag::HTMLTag(HTMLTag {
                         name: name.to_string(),
                         attrs,
                         children,
-                    })
+                    }))
                 }
             }
-            Node::Comment(_) => Tag::Text("".to_string()),
+            Node::Comment(_) => Ok(Tag::Text("".to_string())),
         }
     }
 }
@@ -103,9 +112,12 @@ impl Default for Tag {
 impl Display for Tag {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Tag::HTMLTag(html_tag) if html_tag.children.0.is_empty() => {
-                write!(f, "<{name} />", name = html_tag.name)
-            }
+            Tag::HTMLTag(html_tag) if html_tag.children.0.is_empty() => write!(
+                f,
+                "<{name} {attrs} />",
+                name = html_tag.name,
+                attrs = html_tag.attrs
+            ),
             Tag::HTMLTag(html_tag) => write!(
                 f,
                 "<{name} {attrs}>{body}</{name}>",
@@ -131,7 +143,7 @@ impl<'a> IntoIterator for &'a Tag {
                         append(tag, v)
                     }
                 }
-                Tag::ComponentTag(c) => (),
+                Tag::ComponentTag(_) => (),
                 _ => (),
             }
         }

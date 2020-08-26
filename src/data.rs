@@ -37,7 +37,8 @@ pub fn expand_data(content: &mut String) -> Result<()> {
     while let Some(s) = content.find("{{") {
         let e = content.find("}}").context("Error with data binding")? + 2;
 
-        content.replace_range(s..e, &format!("{}", get_data(&content[(s + 2)..(e - 2)])?));
+        let data = get_data(&content[(s + 2)..(e - 2)])?;
+        content.replace_range(s..e, &format!("{}", data));
     }
     Ok(())
 }
