@@ -4,7 +4,6 @@ use std::fs::File;
 use std::io::Read;
 use std::path::PathBuf;
 
-// path is in the format summ.summ.summ.summ...
 pub fn get_data(path: &str) -> Result<JsonValue> {
     let mut vec = path.split('.').map(str::trim);
     let stem = vec.next().unwrap();
