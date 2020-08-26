@@ -71,8 +71,6 @@ fn build_proj() -> Result<()> {
         "this folder does not match with a html_gen project",
     );
 
-    // let mut components_map = HashMap::<String, Component>::new();
-
     println!("{}. Reading components", "Reading".cyan().bold());
 
     println!("{}. Reading index.html file", "Building".cyan().bold());

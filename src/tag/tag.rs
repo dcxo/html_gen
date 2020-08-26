@@ -28,7 +28,6 @@ pub enum Tag {
 #[derive(Default, Debug, PartialEq, Clone)]
 pub struct Tags(pub Vec<Tag>);
 
-// Constructors
 impl Tag {
     pub fn from_raw(raw_tag: &str) -> Result<Self> {
         let dom = Dom::parse(raw_tag)?;
