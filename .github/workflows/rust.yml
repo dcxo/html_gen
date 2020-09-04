@@ -2,13 +2,13 @@ name: Rust Workflow
 
 on:
   push:
-    branches: [ master, dev ]
+    branches: [ main, stable ]
     paths:
       - 'src/**'
       - 'Cargo.toml'
       - 'examples/**'
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
   workflow_dispatch:
 
