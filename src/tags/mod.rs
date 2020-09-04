@@ -1,4 +1,5 @@
 mod attr;
+mod functional;
 mod tag;
 
 pub use attr::Attrs;

@@ -3,10 +3,10 @@ use std::{collections::HashMap, fmt::Display};
 #[derive(Default, Debug, PartialEq, Clone)]
 pub struct Attrs(pub HashMap<String, Option<String>>);
 
-fn print_attr(attr: (&String, &Option<String>)) -> String {
-    match &attr.1 {
-        Some(val) => format!(r#"{}="{}""#, attr.0, val),
-        None => format!("{}", attr.0),
+fn print_attr((key, val): (&String, &Option<String>)) -> String {
+    match &val {
+        Some(val) => format!(r#"{}="{}""#, key, val),
+        None => format!("{}", key),
     }
 }
 

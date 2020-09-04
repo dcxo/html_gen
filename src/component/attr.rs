@@ -62,8 +62,8 @@ impl ComponentAttr {
 
 pub fn to_hashmap(c_attrs: Vec<ComponentAttr>) -> HashMap<String, AttrKind> {
     let mut map = HashMap::new();
-    for c_attr in c_attrs {
-        map.insert(c_attr.0, c_attr.1);
+    for ComponentAttr(key, val) in c_attrs {
+        map.insert(key, val);
     }
     map
 }

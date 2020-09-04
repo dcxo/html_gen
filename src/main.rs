@@ -11,10 +11,10 @@ use std::{
 mod command;
 mod component;
 mod data;
-mod tag;
+mod tags;
 
 use command::*;
-use tag::Tag;
+use tags::Tag;
 
 fn main() -> Result<()> {
     let opts: Opts = Opts::parse();
@@ -91,6 +91,9 @@ fn build_proj() -> Result<()> {
     println!("{}. Reading data", "Binding".cyan().bold());
 
     data::expand_data(&mut index_content)?;
+
+    #[cfg(debug_assertions)]
+    println!("{}", index_content);
 
     let dst_dir = Path::new("dist");
     if !dst_dir.exists() {

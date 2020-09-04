@@ -4,7 +4,7 @@ use std::{collections::HashMap, fs, io::Read};
 
 mod attr;
 
-use crate::tag::{Attrs, Tag};
+use crate::tags::{Attrs, Tag};
 use attr::{AttrKind, ComponentAttr};
 use fs::File;
 
@@ -48,13 +48,13 @@ impl Component {
 }
 
 impl Component {
-    pub fn expand(&self, attrs: &Attrs) -> Result<String> {
+    pub fn expand(&self, Attrs(attrs): &Attrs) -> Result<String> {
         let mut raw_body = format!("{}", self.body);
 
-        for attr in &attrs.0 {
+        for (key, val) in attrs {
             raw_body = raw_body.replace(
-                &format!("[[{}]]", attr.0),
-                match &attr.1 {
+                &format!("[[{}]]", key),
+                match &val {
                     Some(a) => a,
                     _ => unreachable!(),
                 },
