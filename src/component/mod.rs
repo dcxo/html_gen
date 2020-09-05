@@ -56,7 +56,7 @@ impl Component {
                 &format!("[[{}]]", key),
                 match &val {
                     Some(a) => a,
-                    _ => unreachable!(),
+                    None => "true",
                 },
             );
         }
