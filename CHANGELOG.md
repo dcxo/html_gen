@@ -1,6 +1,9 @@
 # Change log
 
-## [Unreleased]
+## [0.3.0]
+### Added
+- SASS/SCSS tag
+- For tag
 
 ## [0.2.0]
 ### Added
