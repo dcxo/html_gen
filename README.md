@@ -17,6 +17,10 @@ You will need [cargo](https://github.com/rust-lang/cargo) installed
 > cd html_gen
 > cargo install --path .
 ```
+you can simply do:
+```zsh
+> cargo install html_gen
+```
 
 ## Usage
 1. Create a html_gen project
