@@ -1,4 +1,4 @@
-- [ ] Add nested components
+- [x] Add nested components
 - [ ] Improve performance
 - [ ] Add function-like tag (e.g. for, if, etc.)
 - [ ] Online components (? :eyes:) 

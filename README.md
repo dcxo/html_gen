@@ -1,11 +1,14 @@
-# <p style="text-align: center"> html\_gen </p>
+<h1 align="center">html_gen</h1>
+
+<p align="center"> <a href="#installation">Installation</a> | <a href="#usage">Usage</a> | <a href="#components-and-data">Components and data</a> </p>
 
 ---
-<p style="text-align: center"> <a href="#installation">Installation</a> · <a href="#usage">Usage</a> · <a href="#components-and-data">Components and data</a> </p>
+<p align="center">
+  <img src="https://travis-ci.org/dcxo/html_gen.svg?branch=master" /> 
+  <img src="https://github.com/dcxo/html_gen/workflows/Rust%20Workflow/badge.svg" />
+</p>
 
----
-
-html\_gen is a tool to generate static pages, using componets and data written in json files
+html\_gen is a tool to generate static pages, using components and data written in json files
 
 ## Installation
 You will need [cargo](https://github.com/rust-lang/cargo) installed

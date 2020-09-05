@@ -1,28 +1,17 @@
-use anyhow::{ensure, Result};
+use anyhow::{ensure, Context, Result};
+use filepath::FilePath;
 use std::{collections::HashMap, fs, io::Read};
 
 mod attr;
 
-use crate::tag::{Attrs, Tag};
+use crate::tags::{Attrs, Tag};
 use attr::{AttrKind, ComponentAttr};
-use colored::Colorize;
 use fs::File;
-
-pub fn get_components() -> Result<HashMap<String, Component>> {
-    let mut map = HashMap::new();
-    for entry in fs::read_dir("components")? {
-        let file_path = entry.unwrap().path();
-        let stem = file_path.file_stem().unwrap_or_default();
-
-        let comp = Component::from_file(&mut File::open(&file_path)?)?;
-        map.insert(stem.to_str().unwrap().to_string(), comp);
-    }
-    Ok(map)
-}
 
 #[derive(Debug, PartialEq, Default, Clone)]
 pub struct Component {
-    attrs: Vec<ComponentAttr>,
+    name: String,
+    attrs: HashMap<String, AttrKind>,
     pub body: Tag,
 }
 
@@ -32,11 +21,18 @@ impl Component {
 
         file.read_to_string(&mut raw_file_content)?;
 
-        Self::from_raw(raw_file_content)
+        let file_path = file.path()?;
+        let name = file_path
+            .file_stem()
+            .context("Could not get file name, fatal error")?
+            .to_str()
+            .context("Could not get file name, fatal error")?;
+
+        Self::from_raw(raw_file_content, name.to_string())
+            .context(format!("Error parsing {} component", name))
     }
-    pub fn from_raw<S: Into<String>>(raw_body: S) -> Result<Self> {
-        let raw_body_transformed = raw_body.into();
-        let vec = raw_body_transformed.split("=====").collect::<Vec<&str>>();
+    pub fn from_raw(raw_body: String, name: String) -> Result<Self> {
+        let vec = raw_body.split("=====").collect::<Vec<&str>>();
 
         ensure!(vec.len() == 2, "Error parsing a component");
 
@@ -44,27 +40,53 @@ impl Component {
         let raw_body = unsafe { vec.get_unchecked(1) };
 
         Ok(Component {
-            attrs,
+            name,
+            attrs: attr::to_hashmap(attrs),
             body: Tag::from_raw(raw_body)?,
         })
     }
 }
 
 impl Component {
-    pub fn expand(&self, attrs: &Attrs) -> Result<String> {
-        let mut idkwtda = format!("{}", self.body);
+    pub fn expand(&self, Attrs(attrs): &Attrs) -> Result<String> {
+        let mut raw_body = format!("{}", self.body);
 
-        for attr in &attrs.0 {
-            idkwtda = idkwtda.replace(
-                &format!("[[{}]]", attr.0),
-                match &attr.1 {
+        for (key, val) in attrs {
+            raw_body = raw_body.replace(
+                &format!("[[{}]]", key),
+                match &val {
                     Some(a) => a,
                     _ => unreachable!(),
-                }
-                .as_str(),
+                },
             );
         }
 
-        Ok(idkwtda)
+        // This solution creates an infinite loop when using nested components and the child
+        // component use an attribute with the same name from the parent. I think this solution is one of the best
+        // but has this big problem.
+        //
+        // But, even, if the attributes have different names it would results in an error.
+        //
+        // while let Some(s) = raw_body.find("[[") {
+        //     let e = raw_body.find("]]").context("Could not expand component")? + 2;
+
+        //     let attr_key = &raw_body[(s + 2)..(e - 2)];
+        //     let attr_kind = self.attrs.get(attr_key.trim()).context(format!(
+        //         "The attribute {} is not defined in component {}",
+        //         attr_key, self.name
+        //     ))?;
+
+        //     let attr_val = attrs.0.get(attr_key.trim());
+
+        //     match attr_val {
+        //         Some(None) if attr_kind.is_boolean() => raw_body.replace_range(s..e, "true"),
+        //         Some(None) => {}
+        //         Some(Some(a)) => raw_body.replace_range(s..e, dbg!(a)),
+        //         None if attr_kind.is_boolean() => raw_body.replace_range(s..e, "false"),
+        //         None => {}
+        //     };
+        // }
+
+        Ok(raw_body)
     }
 }

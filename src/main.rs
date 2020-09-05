@@ -11,10 +11,10 @@ use std::{
 mod command;
 mod component;
 mod data;
-mod tag;
+mod tags;
 
 use command::*;
-use tag::Tag;
+use tags::Tag;
 
 fn main() -> Result<()> {
     let opts: Opts = Opts::parse();
@@ -71,8 +71,6 @@ fn build_proj() -> Result<()> {
         "this folder does not match with a html_gen project",
     );
 
-    // let mut components_map = HashMap::<String, Component>::new();
-
     println!("{}. Reading components", "Reading".cyan().bold());
 
     println!("{}. Reading index.html file", "Building".cyan().bold());
@@ -93,6 +91,9 @@ fn build_proj() -> Result<()> {
     println!("{}. Reading data", "Binding".cyan().bold());
 
     data::expand_data(&mut index_content)?;
+
+    #[cfg(debug_assertions)]
+    println!("{}", index_content);
 
     let dst_dir = Path::new("dist");
     if !dst_dir.exists() {

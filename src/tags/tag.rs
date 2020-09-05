@@ -1,14 +1,8 @@
-use super::Attrs;
-use crate::component::{get_components, Component};
-use anyhow::{ensure, Result};
+use super::{functional::Functional, Attrs};
+use crate::component::Component;
+use anyhow::{ensure, Context, Result};
 use html_parser::{Dom, Element, Node};
-use std::{
-    collections::HashMap,
-    fmt::{Display, Error},
-    fs::File,
-    path::PathBuf,
-    vec::IntoIter,
-};
+use std::{fmt::Display, fs::File, path::PathBuf, vec::IntoIter};
 
 #[derive(Default, Debug, PartialEq, Clone)]
 pub struct HTMLTag {
@@ -29,50 +23,60 @@ pub enum Tag {
     Text(String),
     HTMLTag(HTMLTag),
     ComponentTag(ComponentTag),
+    FunctionalTag(Functional),
 }
 
 #[derive(Default, Debug, PartialEq, Clone)]
 pub struct Tags(pub Vec<Tag>);
 
-// Constructors
 impl Tag {
     pub fn from_raw(raw_tag: &str) -> Result<Self> {
-        let dom = Dom::parse(raw_tag)?;
+        let mut dom = Dom::parse(raw_tag)?;
         ensure!(dom.children.len() == 1, "This isn't a raw file");
 
         // SAFETY: We previously check that dom.children has only one value
-        let node = unsafe { dom.children.get_unchecked(0) };
-        Ok(Self::from_node(node))
+        let mut node = unsafe { dom.children.get_unchecked_mut(0) };
+        Self::from_node(&mut node)
     }
-    fn from_node(node: &Node) -> Self {
+    fn from_node(node: &mut Node) -> Result<Self> {
         match node {
-            Node::Text(text) => Tag::Text(text.clone()),
+            Node::Text(text) => Ok(Tag::Text(std::mem::take(text))),
             Node::Element(Element {
                 name,
                 attributes,
                 children,
                 ..
             }) => {
-                let path = PathBuf::from("components").join(format!("{}.html", name));
-                let attrs = Attrs::from_hashmap(attributes);
-                let children = Tags(children.iter().map(Self::from_node).collect());
+                let children = Tags(
+                    children
+                        .iter_mut()
+                        .filter_map(|mut n| Self::from_node(&mut n).ok())
+                        .collect(),
+                );
+                let attrs = Attrs::from_hashmap(std::mem::take(attributes));
+
+                if Functional::is_func(name) {
+                    return Ok(Tag::FunctionalTag(Functional::new(name, attrs, children)?));
+                }
+
+                let mut path = PathBuf::from("components");
+                path.set_file_name(format!("{}.html", name));
+
                 if path.exists() {
-                    Tag::ComponentTag(ComponentTag {
+                    Ok(Tag::ComponentTag(ComponentTag {
+                        component: Box::from(Component::from_file(&mut File::open(path)?)?),
                         attrs,
                         children,
-                        component: Box::from(
-                            Component::from_file(&mut File::open(path).unwrap()).unwrap(),
-                        ),
-                    })
+                    }))
                 } else {
-                    Tag::HTMLTag(HTMLTag {
+                    Ok(Tag::HTMLTag(HTMLTag {
                         name: name.to_string(),
                         attrs,
                         children,
-                    })
+                    }))
                 }
             }
-            Node::Comment(_) => Tag::Text("".to_string()),
+            Node::Comment(_) => Ok(Tag::Text("".to_string())),
         }
     }
 }
@@ -110,9 +114,12 @@ impl Default for Tag {
 impl Display for Tag {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Tag::HTMLTag(html_tag) if html_tag.children.0.is_empty() => {
-                write!(f, "<{name} />", name = html_tag.name)
-            }
+            Tag::HTMLTag(html_tag) if html_tag.children.0.is_empty() => write!(
+                f,
+                "<{name} {attrs} />",
+                name = html_tag.name,
+                attrs = html_tag.attrs
+            ),
             Tag::HTMLTag(html_tag) => write!(
                 f,
                 "<{name} {attrs}>{body}</{name}>",
@@ -122,6 +129,7 @@ impl Display for Tag {
             ),
             Tag::Text(content) => write!(f, "{}", content),
             Tag::ComponentTag(_) => writeln!(f, "{}", self.expand_component()),
+            Tag::FunctionalTag(fortag) => writeln!(f, "{}", fortag),
         }
     }
 }
@@ -138,7 +146,7 @@ impl<'a> IntoIterator for &'a Tag {
                         append(tag, v)
                     }
                 }
-                Tag::ComponentTag(c) => (),
+                Tag::ComponentTag(_) => (),
                 _ => (),
             }
         }
