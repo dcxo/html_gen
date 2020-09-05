@@ -2,6 +2,11 @@
 name = "html_gen"
 version = "0.3.0"
 authors = ["David Castilla Ortiz <im@dcxo.dev>"]
+description = "CLI tool to create static web pages using components"
+repository = "https://github.com/dcxo/html_gen"
+keywords = ["web_development", "components", "static_page"]
+categories = ["web-programming", "template-engine"]
+readme = "README.md"
 edition = "2018"
 license = "GPL-3.0"
 
