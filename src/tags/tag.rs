@@ -1,6 +1,6 @@
 use super::{functional::Functional, Attrs};
 use crate::component::Component;
-use anyhow::{ensure, Context, Result};
+use anyhow::{ensure, Result};
 use html_parser::{Dom, Element, Node};
 use std::{fmt::Display, fs::File, path::PathBuf, vec::IntoIter};
 
@@ -60,7 +60,8 @@ impl Tag {
                 }
 
                 let mut path = PathBuf::from("components");
-                path.set_file_name(format!("{}.html", name));
+                path.push(&name);
+                path.set_extension("html");
 
                 if path.exists() {
                     Ok(Tag::ComponentTag(ComponentTag {
