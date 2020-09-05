@@ -45,6 +45,8 @@ impl Tag {
                 name,
                 attributes,
                 children,
+                id,
+                classes,
                 ..
             }) => {
                 let children = Tags(
@@ -53,7 +55,13 @@ impl Tag {
                         .filter_map(|mut n| Self::from_node(&mut n).ok())
                         .collect(),
                 );
-                let attrs = Attrs::from_hashmap(std::mem::take(attributes));
+                let mut attrs = Attrs::from_hashmap(std::mem::take(attributes));
+                if let Some(_) = id {
+                    attrs.0.insert("id".to_string(), id.take());
+                }
+                if classes.len() > 0 {
+                    attrs.0.insert("class".to_string(), Some(classes.join(" ")));
+                }
 
                 if Functional::is_func(name) {
                     return Ok(Tag::FunctionalTag(Functional::new(name, attrs, children)?));
