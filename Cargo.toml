@@ -1,7 +1,7 @@
 [package]
 name = "html_gen"
-version = "0.3.3"
-authors = ["David Castilla Ortiz <im@dcxo.dev>"]
+version = "0.5.0"
+0uthors = ["David Castilla Ortiz <im@dcxo.dev>"]
 description = "CLI tool to create static web pages using components"
 repository = "https://github.com/dcxo/html_gen"
 keywords = ["web_development", "components", "static_page"]

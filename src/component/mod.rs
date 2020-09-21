@@ -1,18 +1,17 @@
-use anyhow::{ensure, Context, Result};
+use anyhow::{Context, Result};
 use filepath::FilePath;
-use std::{collections::HashMap, fs, io::Read};
+use std::{fs, io::Read};
 
 mod attr;
 
-use crate::tags::{Attrs, Tag};
-use attr::{AttrKind, ComponentAttr};
+use crate::{tags::{Attrs, Tag}, tags::Tags};
 use fs::File;
 
 #[derive(Debug, PartialEq, Default, Clone)]
 pub struct Component {
     name: String,
-    attrs: HashMap<String, AttrKind>,
-    pub body: Tag,
+    attrs: Vec<String>,
+    pub body: Tags,
 }
 
 impl Component {
@@ -32,18 +31,26 @@ impl Component {
             .context(format!("Error parsing {} component", name))
     }
     pub fn from_raw(raw_body: String, name: String) -> Result<Self> {
-        let vec = raw_body.split("=====").collect::<Vec<&str>>();
+        let mut tags = Tag::from_fragment(&raw_body)?;
 
-        ensure!(vec.len() == 2, "Error parsing a component");
+        if tags.0.len() == 1 {
+            if let Tag::HTMLTag(tag) = unsafe { tags.0.get_unchecked_mut(0) } {
+                
+                Ok(Component{
+                    name,
+                    attrs: tag.attrs.0.keys().map(String::from).collect(),
+                    body: std::mem::take(&mut tag.children)
+                })
 
-        let attrs = ComponentAttr::from_keys_values(vec.get(0).unwrap());
-        let raw_body = unsafe { vec.get_unchecked(1) };
+            } else {
+                unreachable!()
+            }
+        } else {
+            Ok(Component {
+                name, attrs: vec![], body: tags
+            })
+        }
 
-        Ok(Component {
-            name,
-            attrs: attr::to_hashmap(attrs),
-            body: Tag::from_raw(raw_body)?,
-        })
     }
 }
 
@@ -60,7 +67,6 @@ impl Component {
                 },
             );
         }
-
         // This solution creates an infinite loop when using nested components and the child
         // component use an attribute with the same name from the parent. I think this solution is one of the best
         // but has this big problem.

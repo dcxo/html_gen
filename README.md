@@ -35,5 +35,39 @@ you can simply do:
 
 3. Your static page will be avaliable on the `dist` folder
 
-## Components and data
-[TODO: add documentation (It will be added when there is a new way to write the components). ](https://github.com/dcxo/html_gen/issues/2)
+## Components
+To create a component, you have to create a html file in the `components` folder. The content of that file can be:
+```html
+<Component [component's attributes]>
+    [component's body]
+</Component>
+```
+like this to use attributes in your component, or directly without the `Component` tag:
+```html
+[component's body]
+```
+to not use attributes.
+
+To use it, you just write in your index or other component 
+```html
+<[component's name] [component's attributes] />
+```
+
+## Data
+To use data, create a json file in `data` folder, for example, the file `info.json`:
+```json
+{
+    "name": "html_gen",
+    "tags": [
+        "components", "html"
+    ]
+}
+```
+to use it use wrap in double curly brackets `{{...}}` a path to the value you want to use, i.e.:
+```html
+<!-- html content -->
+{{ info.name }}
+{{ info.tags.0 }}
+{{ info.tags.1 }}
+<!-- more html content -->
+```

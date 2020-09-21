@@ -82,7 +82,7 @@ fn build_proj() -> Result<()> {
         .context("Could not read index.html.")?;
     let mut index_content = String::from_utf8(buf)?;
 
-    let index_parsed = Tag::from_raw(&index_content).context("Could not parse index.html")?;
+    let index_parsed = Tag::from_index(&index_content).context("Could not parse index.html")?;
 
     println!("{}. Expanding macros", "Expanding".cyan().bold());
 

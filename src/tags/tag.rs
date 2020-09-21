@@ -30,9 +30,19 @@ pub enum Tag {
 pub struct Tags(pub Vec<Tag>);
 
 impl Tag {
-    pub fn from_raw(raw_tag: &str) -> Result<Self> {
+    pub fn from_fragment(raw_tag: &str) -> Result<Tags> {
         let mut dom = Dom::parse(raw_tag)?;
-        ensure!(dom.children.len() == 1, "This isn't a raw file");
+        let mut children = dom
+            .children
+            .iter_mut()
+            .filter_map(|node| Self::from_node(node).ok())
+            .collect();
+
+        Ok(Tags(children))
+    }
+    pub fn from_index(raw_tag: &str) -> Result<Self> {
+        let mut dom = Dom::parse(raw_tag)?;
+        ensure!(dom.children.len() == 1, "This isn't an index file");
 
         // SAFETY: We previously check that dom.children has only one value
         let mut node = unsafe { dom.children.get_unchecked_mut(0) };
