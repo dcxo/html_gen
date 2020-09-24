@@ -4,7 +4,11 @@ use std::{fs, io::Read};
 
 mod attr;
 
-use crate::{tags::{Attrs, Tag}, tags::Tags};
+use crate::tags::HTMLTag;
+use crate::{
+    tags::Tags,
+    tags::{Attrs, Tag},
+};
 use fs::File;
 
 #[derive(Debug, PartialEq, Default, Clone)]
@@ -33,24 +37,18 @@ impl Component {
     pub fn from_raw(raw_body: String, name: String) -> Result<Self> {
         let mut tags = Tag::from_fragment(&raw_body)?;
 
-        if tags.0.len() == 1 {
-            if let Tag::HTMLTag(tag) = unsafe { tags.0.get_unchecked_mut(0) } {
-                
-                Ok(Component{
-                    name,
-                    attrs: tag.attrs.0.keys().map(String::from).collect(),
-                    body: std::mem::take(&mut tag.children)
-                })
-
-            } else {
-                unreachable!()
-            }
-        } else {
-            Ok(Component {
-                name, attrs: vec![], body: tags
-            })
+        match tags.0.get_mut(0) {
+            Some(Tag::HTMLTag(tag)) if tag.name == "Component" => Ok(Component {
+                name,
+                attrs: tag.attrs.0.keys().map(String::from).collect(),
+                body: std::mem::take(&mut tag.children),
+            }),
+            _ => Ok(Component {
+                name,
+                attrs: vec![],
+                body: tags,
+            }),
         }
-
     }
 }
 
